@@ -1,0 +1,132 @@
+// ===========================
+// Load Area of Interest (AOI)
+// ===========================
+var table = ee.FeatureCollection("projects/ee-kobinaamens/assets/Cape_Coast");
+
+// ===========================
+// Load and Clip Dataset
+// ===========================
+var dataset = ee.ImageCollection('ESA/WorldCover/v200')
+                .first()
+                .clip(table);
+
+// ===========================
+// Visualization Parameters
+// ===========================
+var visualization = {
+  bands: ['Map'],
+  min: 10,
+  max: 100,
+  palette: [
+    '#006400', // Tree cover
+    '#ffbb22', // Shrubland
+    '#ffff4c', // Grassland
+    '#f096ff', // Cropland
+    '#fa0000', // Built-up
+    '#b4b4b4', // Bare / sparse vegetation
+    '#f0f0f0', // Snow and ice
+    '#0064c8', // Permanent water bodies
+    '#0096a0', // Herbaceous wetland
+    '#00cf75', // Mangroves
+    '#fae6a0'  // Moss and lichen
+  ]
+};
+
+// ===========================
+// Display Map
+// ===========================
+Map.centerObject(table, 10);
+Map.addLayer(dataset, visualization, 'ESA WorldCover (Cape Coast)');
+
+// ===========================
+// Title (Map Title Label)
+// ===========================
+var title = ui.Label('LAND USE LAND COVER OF CAPE COAST', {
+  fontWeight: 'bold',
+  fontSize: '20px',
+  textAlign: 'center',
+  stretch: 'horizontal',
+  margin: '10px 0 0 0'
+});
+Map.add(title);
+
+// ===========================
+// Legend Panel
+// ===========================
+var legend = ui.Panel({
+  style: {
+    position: 'bottom-left',
+    padding: '8px 15px'
+  }
+});
+
+legend.add(ui.Label({
+  value: 'Land Cover Legend',
+  style: {
+    fontWeight: 'bold',
+    fontSize: '14px',
+    margin: '0 0 4px 0'
+  }
+}));
+
+var landCover = [
+  {name: 'Tree cover', color: '#006400'},
+  {name: 'Shrubland', color: '#ffbb22'},
+  {name: 'Grassland', color: '#ffff4c'},
+  {name: 'Cropland', color: '#f096ff'},
+  {name: 'Built-up', color: '#fa0000'},
+  {name: 'Bare / sparse vegetation', color: '#b4b4b4'},
+  {name: 'Snow and ice', color: '#f0f0f0'},
+  {name: 'Permanent water bodies', color: '#0064c8'},
+  {name: 'Herbaceous wetland', color: '#0096a0'},
+  {name: 'Mangroves', color: '#00cf75'},
+  {name: 'Moss and lichen', color: '#fae6a0'}
+];
+
+landCover.forEach(function(item) {
+  var colorBox = ui.Label('', {
+    backgroundColor: item.color,
+    padding: '8px',
+    margin: '0 0 4px 0'
+  });
+  var description = ui.Label(item.name, {margin: '0 0 4px 6px'});
+  legend.add(ui.Panel([colorBox, description], ui.Panel.Layout.Flow('horizontal')));
+});
+
+Map.add(legend);
+
+// ===========================
+// Simulated Scale Bar (Static Label)
+// ===========================
+var scaleBar = ui.Label('Scale: ~1:50,000', {
+  position: 'bottom-right',
+  fontSize: '12px',
+  padding: '4px',
+  backgroundColor: 'white'
+});
+Map.add(scaleBar);
+
+// ===========================
+// North Arrow (simulated using text)
+// ===========================
+var northArrow = ui.Label('N', {
+  position: 'top-right',
+  fontWeight: 'bold',
+  fontSize: '18px',
+  padding: '4px',
+  backgroundColor: 'white'
+});
+Map.add(northArrow);
+
+// ===========================
+// Export Clipped Image
+// ===========================
+Export.image.toDrive({
+  image: dataset,
+  description: 'ESA_WorldCover_Cape_Coast',
+  folder: 'GEE_Exports',
+  scale: 10,
+  region: table.geometry(),
+  fileFormat: 'GeoTIFF',
+  maxPixels: 1e13
+});
